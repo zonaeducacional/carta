@@ -11,6 +11,9 @@
     <!-- Tone.js para gerar os sons da máquina de escrever dinamicamente -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
 
+    <!-- NOVA BIBLIOTECA: html2pdf.js para gerar o PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" xintegrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <!-- Fonte para a interface e para a máquina de escrever -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,29 +25,23 @@
             font-family: 'Inter', sans-serif;
         }
         
-        /* A fonte que simula a máquina de escrever */
         .font-typewriter {
             font-family: 'Special Elite', monospace;
         }
 
-        /* Esconde a área de texto real, mas a mantém acessível */
         #hidden-textarea {
             position: absolute;
             left: -9999px;
             top: 0;
             opacity: 0;
-            width: 1px;
-            height: 1px;
         }
 
-        /* Estilos base para o papel */
         #paper {
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             transition: all 0.3s ease-in-out;
             cursor: text;
         }
 
-        /* Estilos específicos para cada tipo de papel */
         .paper-linho-marfim {
             background-color: #FDFBF5;
             border: 1px solid #EAE6DA;
@@ -71,7 +68,6 @@
             border-left: 3px solid #F87171;
         }
         
-        /* Animação do cursor piscando */
         #cursor {
             display: inline-block;
             width: 8px;
@@ -86,13 +82,16 @@
             50% { background-color: #333; }
         }
 
-        /* Estilo para os botões de controle */
         .control-button {
             transition: all 0.2s ease;
         }
-        .control-button:hover {
+        .control-button:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .control-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -102,7 +101,6 @@
     <div id="paper-selection-screen" class="w-full max-w-4xl text-center">
         <h1 class="text-4xl md:text-5xl font-bold mb-4 font-typewriter">Ateliê Epistolar</h1>
         
-        <!-- TEXTO POÉTICO INTRODUTÓRIO -->
         <div class="text-lg text-gray-600 mb-10 mx-auto max-w-2xl space-y-4">
             <p>Num tempo de palavras apressadas, que nascem e morrem no mesmo instante, este é um refúgio.</p>
             <p>Um lugar para a pausa. Para sentir o peso de cada letra, o som de cada ideia a tomar forma. Um ato de resistência contra o efémero.</p>
@@ -110,21 +108,17 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Opção 1: Papel Linho Marfim -->
+            <!-- Opções de papel... -->
             <div class="paper-option bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer" data-paper-type="paper-linho-marfim">
                 <div class="w-full h-32 paper-linho-marfim rounded mb-4 border"></div>
                 <h2 class="text-xl font-bold mb-2">Papel Linho Marfim</h2>
                 <p class="text-gray-600">Um clássico atemporal. Ideal para uma correspondência elegante ou uma reflexão profunda.</p>
             </div>
-            
-            <!-- Opção 2: Pergaminho Salinas -->
             <div class="paper-option bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer" data-paper-type="paper-pergaminho-salinas">
                 <div class="w-full h-32 paper-pergaminho-salinas rounded mb-4 border"></div>
                 <h2 class="text-xl font-bold mb-2">Pergaminho "Salinas, 1920"</h2>
                 <p class="text-gray-600">Um papel envelhecido, para cartas que dialogam com a própria História e a memória.</p>
             </div>
-
-            <!-- Opção 3: Rascunho do Poeta -->
             <div class="paper-option bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer" data-paper-type="paper-rascunho-poeta">
                 <div class="w-full h-32 paper-rascunho-poeta rounded mb-4 border"></div>
                 <h2 class="text-xl font-bold mb-2">Rascunho do Poeta</h2>
@@ -135,21 +129,19 @@
 
     <!-- TELA 2: ESCRITA DA CARTA -->
     <div id="writing-screen" class="hidden w-full h-full flex flex-col items-center">
-        <!-- A área de texto oculta que realmente captura a digitação -->
         <textarea id="hidden-textarea" autofocus></textarea>
         
-        <!-- A representação visual do papel e do texto -->
         <div id="paper" class="w-full max-w-3xl h-[80vh] p-8 md:p-12 overflow-y-auto font-typewriter text-2xl leading-loose">
             <span id="paper-content"></span><span id="cursor"></span>
         </div>
         
-        <!-- Controles para compartilhar e voltar -->
+        <!-- Controles atualizados -->
         <div id="controls" class="mt-6 flex flex-wrap gap-4 justify-center">
             <button id="btn-email" class="control-button bg-blue-600 text-white font-bold py-2 px-5 rounded-lg">Enviar por Email</button>
-            <button id="btn-copy" class="control-button bg-green-600 text-white font-bold py-2 px-5 rounded-lg">Copiar Texto</button>
+            <!-- BOTÃO ALTERADO -->
+            <button id="btn-pdf" class="control-button bg-green-600 text-white font-bold py-2 px-5 rounded-lg">Baixar em PDF</button>
             <button id="btn-back" class="control-button bg-gray-500 text-white font-bold py-2 px-5 rounded-lg">Trocar Papel</button>
         </div>
-        <div id="copy-feedback" class="mt-2 text-green-700 font-semibold opacity-0 transition-opacity">Texto copiado para a área de transferência!</div>
     </div>
 
     <script>
@@ -161,40 +153,18 @@
         const paperContent = document.getElementById('paper-content');
         const hiddenTextarea = document.getElementById('hidden-textarea');
         const btnEmail = document.getElementById('btn-email');
-        const btnCopy = document.getElementById('btn-copy');
+        const btnPdf = document.getElementById('btn-pdf'); // Novo botão
         const btnBack = document.getElementById('btn-back');
-        const copyFeedback = document.getElementById('copy-feedback');
+        const cursor = document.getElementById('cursor');
 
         let currentText = '';
 
         // --- Configuração dos Sons com Tone.js ---
-        const keyClickSound = new Tone.MembraneSynth({
-            pitchDecay: 0.01,
-            octaves: 6,
-            oscillator: { type: 'square' },
-            envelope: {
-                attack: 0.001,
-                decay: 0.2,
-                sustain: 0.01,
-                release: 0.2,
-            }
-        }).toDestination();
+        const keyClickSound = new Tone.MembraneSynth({ pitchDecay: 0.01, octaves: 6, oscillator: { type: 'square' }, envelope: { attack: 0.001, decay: 0.2, sustain: 0.01, release: 0.2, }}).toDestination();
         keyClickSound.volume.value = -10;
-
-        const plingSound = new Tone.MetalSynth({
-            frequency: 400,
-            envelope: { attack: 0.001, decay: 0.4, release: 0.2 },
-            harmonicity: 8.1,
-            modulationIndex: 40,
-            resonance: 3000,
-            octaves: 1.5
-        }).toDestination();
+        const plingSound = new Tone.MetalSynth({ frequency: 400, envelope: { attack: 0.001, decay: 0.4, release: 0.2 }, harmonicity: 8.1, modulationIndex: 40, resonance: 3000, octaves: 1.5 }).toDestination();
         plingSound.volume.value = -8;
-
-        const carriageReturnSound = new Tone.NoiseSynth({
-            noise: { type: 'white' },
-            envelope: { attack: 0.005, decay: 0.1, sustain: 0 }
-        }).toDestination();
+        const carriageReturnSound = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0 }}).toDestination();
         carriageReturnSound.volume.value = -15;
 
         // --- Lógica da Aplicação ---
@@ -203,30 +173,22 @@
         paperOptions.forEach(option => {
             option.addEventListener('click', () => {
                 const paperType = option.getAttribute('data-paper-type');
-                
                 paper.className = `w-full max-w-3xl h-[80vh] p-8 md:p-12 overflow-y-auto font-typewriter text-2xl leading-loose ${paperType}`;
-                
                 paperSelectionScreen.classList.add('hidden');
                 writingScreen.classList.remove('hidden');
-                
                 hiddenTextarea.focus();
-                
                 Tone.start();
             });
         });
 
         // 2. Simulação da Digitação
-        paper.addEventListener('click', () => {
-            hiddenTextarea.focus();
-        });
-
+        paper.addEventListener('click', () => { hiddenTextarea.focus(); });
         hiddenTextarea.addEventListener('input', (e) => {
             currentText = e.target.value;
             paperContent.innerHTML = currentText.replace(/\n/g, '<br>');
             keyClickSound.triggerAttack('C2');
             paper.scrollTop = paper.scrollHeight;
         });
-
         hiddenTextarea.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 plingSound.triggerAttackRelease('C5', '8n', Tone.now());
@@ -245,21 +207,41 @@
             paperSelectionScreen.classList.remove('hidden');
         });
 
-        btnCopy.addEventListener('click', () => {
-            navigator.clipboard.writeText(currentText).then(() => {
-                copyFeedback.classList.remove('opacity-0');
-                setTimeout(() => {
-                    copyFeedback.classList.add('opacity-0');
-                }, 2000);
-            }).catch(err => {
-                console.error('Erro ao copiar texto: ', err);
-            });
-        });
-
         btnEmail.addEventListener('click', () => {
             const subject = "Uma carta do Ateliê Epistolar";
             const body = encodeURIComponent(currentText);
             window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        });
+
+        // NOVA LÓGICA: Gerar e baixar o PDF
+        btnPdf.addEventListener('click', () => {
+            // Esconde o cursor piscando para não aparecer no PDF
+            cursor.style.display = 'none';
+            btnPdf.textContent = 'A gerar...';
+            btnPdf.disabled = true;
+
+            const element = document.getElementById('paper');
+            const options = {
+                margin:       [0.5, 0.5, 0.5, 0.5], // top, left, bottom, right in inches
+                filename:     'carta_atelie_epistolar.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            // Usa a biblioteca para criar o PDF a partir do elemento 'paper'
+            html2pdf().set(options).from(element).save().then(() => {
+                // Quando o processo terminar, restaura o botão e o cursor
+                cursor.style.display = 'inline-block';
+                btnPdf.textContent = 'Baixar em PDF';
+                btnPdf.disabled = false;
+            }).catch((err) => {
+                console.error("Erro ao gerar PDF:", err);
+                // Restaura o botão mesmo em caso de erro
+                cursor.style.display = 'inline-block';
+                btnPdf.textContent = 'Baixar em PDF';
+                btnPdf.disabled = false;
+            });
         });
 
     </script>
