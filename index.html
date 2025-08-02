@@ -7,18 +7,20 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-    <!-- CORREÇÃO CRÍTICA: 'xintegrity' foi corrigido para 'integrity' -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" xintegrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Special+Elite&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         body { font-family: 'Inter', sans-serif; }
         .font-typewriter { font-family: 'Special Elite', monospace; }
+        .font-quill { font-family: 'Caveat', cursive; font-size: 2.25rem; line-height: 2.5rem; }
+
         #hidden-textarea { position: absolute; left: -9999px; top: 0; opacity: 0; }
-        #paper { box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: all 0.3s ease-in-out; cursor: text; position: relative; overflow-y: auto; }
+        #paper, .letter-view { box-shadow: 0 10px 25px rgba(0,0,0,0.1); transition: all 0.3s ease-in-out; position: relative; }
+        #paper { cursor: text; overflow-y: auto; }
         .paper-linho-marfim { background-color: #FDFBF5; border: 1px solid #EAE6DA; }
         .paper-pergaminho-salinas { background-color: #F5EEDC; background-image: linear-gradient(rgba(210, 180, 140, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(210, 180, 140, 0.15) 1px, transparent 1px); background-size: 20px 20px; border: 1px solid #D2B48C; box-shadow: 0 10px 30px rgba(80, 50, 20, 0.2); }
         .paper-rascunho-poeta { background-color: #FFFFFF; background-image: repeating-linear-gradient(to bottom, transparent, transparent 24px, #E2E8F0 24px, #E2E8F0 25px); border-left: 3px solid #F87171; }
@@ -27,146 +29,258 @@
         .control-button { transition: all 0.2s ease; }
         .control-button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .control-button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .seal-option { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .seal-option:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .choice-card { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .choice-card:hover { transform: scale(1.03); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
-        .inline-seal-container {
-            text-align: right;
-            margin-top: 2rem;
-        }
-        .inline-seal {
-            display: inline-block;
-            width: 80px;
-            height: 80px;
-            vertical-align: middle;
-        }
+        .letter-thumbnail-wrapper { position: relative; }
+        .letter-thumbnail { height: 250px; padding: 1rem; overflow: hidden; position: relative; cursor: pointer; border-radius: 0.5rem; }
+        .letter-thumbnail::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0)); }
+        .paper-linho-marfim.letter-thumbnail::after { background: linear-gradient(to top, #FDFBF5, rgba(253,251,245,0)); }
+        .paper-pergaminho-salinas.letter-thumbnail::after { background: linear-gradient(to top, #F5EEDC, rgba(245,238,220,0)); }
+        .delete-btn { position: absolute; top: 0.5rem; right: 0.5rem; background-color: rgba(239, 68, 68, 0.8); color: white; border-radius: 50%; width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; line-height: 1; cursor: pointer; opacity: 0; transition: opacity 0.2s ease; }
+        .letter-thumbnail-wrapper:hover .delete-btn { opacity: 1; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4">
 
-    <!-- TELA 1: SELEÇÃO DE PAPEL -->
-    <div id="paper-selection-screen" class="w-full max-w-4xl text-center">
+    <!-- TELA 1: MENU PRINCIPAL (ATUALIZADO) -->
+    <div id="main-screen" class="w-full max-w-4xl text-center">
         <h1 class="text-4xl md:text-5xl font-bold mb-4 font-typewriter">Ateliê Epistolar</h1>
-        <div class="text-lg text-gray-600 mb-10 mx-auto max-w-2xl space-y-4">
+        <div class="text-lg text-gray-600 mb-12 mx-auto max-w-2xl space-y-4">
             <p>Num tempo de palavras apressadas, que nascem e morrem no mesmo instante, este é um refúgio.</p>
-            <p>Um lugar para a pausa. Para sentir o peso de cada letra, o som de cada ideia a tomar forma. Um ato de resistência contra o efémero.</p>
-            <p class="font-semibold">Escolha o seu papel. Dê tempo ao seu pensamento. Escreva para que permaneça.</p>
+            <p>Um lugar para a pausa, para o pensamento que respira antes de se tornar tinta. Bem-vindo.</p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="paper-option bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer" data-paper-type="paper-linho-marfim"><div class="w-full h-32 paper-linho-marfim rounded mb-4 border"></div><h2 class="text-xl font-bold mb-2">Papel Linho Marfim</h2><p class="text-gray-600">Um clássico atemporal.</p></div>
-            <div class="paper-option bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer" data-paper-type="paper-pergaminho-salinas"><div class="w-full h-32 paper-pergaminho-salinas rounded mb-4 border"></div><h2 class="text-xl font-bold mb-2">Pergaminho "Salinas, 1920"</h2><p class="text-gray-600">Para cartas que dialogam com a História.</p></div>
-            <div class="paper-option bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer" data-paper-type="paper-rascunho-poeta"><div class="w-full h-32 paper-rascunho-poeta rounded mb-4 border"></div><h2 class="text-xl font-bold mb-2">Rascunho do Poeta</h2><p class="text-gray-600">Para a urgência da inspiração.</p></div>
+        <div class="flex justify-center items-center">
+            <button id="btn-new-letter" class="control-button bg-gray-800 text-white font-bold py-4 px-8 rounded-lg text-xl">Escrever Nova Carta</button>
         </div>
     </div>
 
-    <!-- TELA 2: ESCRITA DA CARTA -->
+    <!-- TELA 2: ESCOLHA DO INSTRUMENTO -->
+    <div id="instrument-selection-screen" class="hidden w-full max-w-4xl text-center">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4 font-typewriter">Passo Um</h1>
+        <p class="text-lg text-gray-600 mb-12">Escolha o seu instrumento de escrita.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="instrument-option choice-card bg-white p-8 rounded-lg shadow-md" data-instrument="typewriter"><h2 class="text-3xl font-bold mb-4 font-typewriter">Máquina de Escrever</h2><p class="text-gray-600">Para a palavra precisa, com o som metálico e o ritmo da História.</p></div>
+            <div class="instrument-option choice-card bg-white p-8 rounded-lg shadow-md" data-instrument="quill"><h2 class="text-3xl font-bold mb-4 font-quill">Pena e Tinteiro</h2><p class="text-gray-600">Para o pensamento fluido, com o silêncio da pena a deslizar no papel.</p></div>
+        </div>
+        <button id="btn-back-to-main-menu" class="mt-8 text-gray-600 hover:text-gray-800 font-semibold">Voltar ao Menu</button>
+    </div>
+
+    <!-- TELA 3: SELEÇÃO DE PAPEL -->
+    <div id="paper-selection-screen" class="hidden w-full max-w-4xl text-center">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4 font-typewriter">Passo Dois</h1>
+        <p class="text-lg text-gray-600 mb-12">Agora, escolha o material.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="paper-option choice-card bg-white p-6 rounded-lg shadow-md" data-paper-type="paper-linho-marfim"><div class="w-full h-32 paper-linho-marfim rounded mb-4 border"></div><h2 class="text-xl font-bold mb-2">Papel Linho Marfim</h2></div>
+            <div class="paper-option choice-card bg-white p-6 rounded-lg shadow-md" data-paper-type="paper-pergaminho-salinas"><div class="w-full h-32 paper-pergaminho-salinas rounded mb-4 border"></div><h2 class="text-xl font-bold mb-2">Pergaminho "Salinas, 1920"</h2></div>
+            <div class="paper-option choice-card bg-white p-6 rounded-lg shadow-md" data-paper-type="paper-rascunho-poeta"><div class="w-full h-32 paper-rascunho-poeta rounded mb-4 border"></div><h2 class="text-xl font-bold mb-2">Rascunho do Poeta</h2></div>
+        </div>
+        <button id="btn-back-to-instrument" class="mt-8 text-gray-600 hover:text-gray-800 font-semibold">Voltar</button>
+    </div>
+
+    <!-- TELA 4: ESCRITA DA CARTA (ATUALIZADO) -->
     <div id="writing-screen" class="hidden w-full h-screen flex flex-col items-center p-2 sm:p-4">
         <textarea id="hidden-textarea" autofocus></textarea>
-        
-        <div id="paper" class="w-full max-w-3xl flex-grow p-8 md:p-12 font-typewriter text-2xl leading-loose">
+        <div id="paper" class="w-full max-w-3xl flex-grow p-8 md:p-12 text-2xl leading-loose">
             <span id="paper-content"></span><span id="cursor"></span>
         </div>
-        
         <div class="w-full max-w-3xl mt-4 flex-shrink-0">
             <div id="controls" class="flex flex-wrap gap-2 sm:gap-4 justify-center">
-                <button id="btn-email" class="control-button bg-blue-600 text-white font-bold py-2 px-4 sm:px-5 rounded-lg text-sm sm:text-base">Email</button>
-                <button id="btn-seal" class="control-button bg-green-600 text-white font-bold py-2 px-4 sm:px-5 rounded-lg text-sm sm:text-base">Finalizar e Selar</button>
-                <button id="btn-back" class="control-button bg-gray-500 text-white font-bold py-2 px-4 sm:px-5 rounded-lg text-sm sm:text-base">Trocar Papel</button>
+                <button id="btn-publish" class="control-button bg-indigo-600 text-white font-bold py-2 px-4 sm:px-5 rounded-lg text-sm sm:text-base" disabled>Publicar na Galeria</button>
+                <button id="btn-view-gallery" class="control-button bg-blue-600 text-white font-bold py-2 px-4 sm:px-5 rounded-lg text-sm sm:text-base">Ver Galeria</button>
+                <button id="btn-pdf" class="control-button bg-green-600 text-white font-bold py-2 px-4 sm:px-5 rounded-lg text-sm sm:text-base" disabled>Baixar em PDF</button>
+                <button id="btn-back" class="control-button bg-gray-500 text-white font-bold py-2 px-4 sm:px-5 rounded-lg text-sm sm:text-base">Começar de Novo</button>
             </div>
             <div id="feedback-message" class="mt-2 h-6 text-center font-semibold opacity-0 transition-opacity"></div>
         </div>
     </div>
 
-    <!-- TELA 3: SELEÇÃO DE SELO (MODAL) -->
-    <div id="seal-modal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-lg shadow-xl p-8 max-w-2xl w-full text-center">
-            <h2 class="text-3xl font-bold mb-4">O Gesto Final</h2>
-            <p class="text-lg text-gray-600 mb-10">Escolha um lacre para a sua carta.</p>
-            <div class="flex justify-center items-center gap-8 mb-8">
-                <div class="seal-option" data-seal-id="fleur-de-lis"><svg viewBox="0 0 100 100" class="w-24 h-24 fill-current text-red-700"><path d="M50 0 L40 20 L20 20 L30 40 L10 50 L30 60 L20 80 L40 80 L50 100 L60 80 L80 80 L70 60 L90 50 L70 40 L80 20 L60 20 Z" transform="scale(0.8) translate(12, 12)"></path><path d="M50,10 C60,25 60,40 50,50 C40,40 40,25 50,10 M50,55 L45,90 L55,90 L50,55 M25,30 L15,45 L35,45 L25,30 M75,30 L65,45 L85,45 L75,30" fill="#C53030"></path></svg></div>
-                <div class="seal-option" data-seal-id="quill"><svg viewBox="0 0 100 100" class="w-24 h-24 fill-current text-blue-800"><path d="M50 0 L40 20 L20 20 L30 40 L10 50 L30 60 L20 80 L40 80 L50 100 L60 80 L80 80 L70 60 L90 50 L70 40 L80 20 L60 20 Z" transform="scale(0.8) translate(12, 12)"></path><path fill="#2C5282" d="M77.2,6.9C74.9,4.6,71.7,3,68.2,3c-2.4,0-4.8,0.7-6.9,2.1c-2.4,1.6-4.4,3.7-5.9,6.3c-0.8,1.4-1.5,2.9-2,4.4 c-2.9,8.4-5.4,17-7.2,25.6c-0.1,0.7-0.2,1.3-0.3,1.9L22.2,71.9c-0.3,0.3-0.5,0.7-0.5,1.1c0,0.4,0.2,0.8,0.5,1.1l2.1,2.1 c0.3,0.3,0.7,0.5,1.1,0.5s0.8-0.2,1.1-0.5l28.6-28.6c0.6-0.1,1.2-0.2,1.9-0.3c8.6-1.8,17.2-4.3,25.6-7.2c1.5-0.5,3-1.2,4.4-2 c2.6-1.5,4.7-3.5,6.3-5.9C91.3,31.8,92,29.4,92,27c0-3.5-1.6-6.7-3.9-9C85.8,15.7,81.9,13.3,77.2,6.9z M82.1,30.1 c-1.2,0.8-2.5,1.4-3.8,1.8c-8.1,2.8-16.3,5.2-24.5,6.9c-0.1,0-0.2,0-0.3,0c-0.5,0-1-0.1-1.5-0.2L24.4,66.2l-0.7-0.7L51.3,37.9 c-0.1-0.5-0.2-1-0.2-1.5c0-0.1,0-0.2,0-0.3c1.7-8.1,4.1-16.3,6.9-24.5c0.4-1.3,1-2.6,1.8-3.8c1.3-1.9,2.8-3.4,4.7-4.7 c1.6-1.1,3.4-1.7,5.2-1.7c2.8,0,5.4,1.3,7.2,3.1c1.8,1.8,3.1,4.4,3.1,7.2C85.5,25.9,84,28.2,82.1,30.1z"></path></svg></div>
-                <div class="seal-option" data-seal-id="initial-s"><svg viewBox="0 0 100 100" class="w-24 h-24 fill-current text-gray-700"><path d="M50 0 L40 20 L20 20 L30 40 L10 50 L30 60 L20 80 L40 80 L50 100 L60 80 L80 80 L70 60 L90 50 L70 40 L80 20 L60 20 Z" transform="scale(0.8) translate(12, 12)"></path><text x="50" y="70" font-family="serif" font-size="50" fill="#4A5568" text-anchor="middle" font-weight="bold">S</text></svg></div>
-            </div>
-             <button id="btn-cancel-seal" class="text-gray-600 hover:text-gray-800 font-semibold">Cancelar</button>
-        </div>
+    <!-- TELA 5: GALERIA -->
+    <div id="gallery-screen" class="hidden w-full max-w-6xl text-center">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 font-typewriter">Galeria de Cartas</h1>
+        <p class="text-lg text-gray-600 mb-12">Toque numa carta para a ler ou no '×' para a excluir.</p>
+        <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"></div>
+        <button id="btn-back-to-main" class="control-button mt-12 bg-gray-500 text-white font-bold py-3 px-6 rounded-lg">Voltar ao Menu</button>
     </div>
 
+    <!-- TELA 6: LEITOR DE CARTA (MODAL) -->
+    <div id="letter-viewer-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center p-4 z-50">
+        <div id="letter-view" class="letter-view w-full max-w-3xl h-[90vh] p-8 md:p-12 overflow-y-auto relative">
+            <p id="letter-viewer-content"></p>
+        </div>
+        <button id="btn-close-viewer" class="absolute top-4 right-4 text-white text-5xl font-bold">&times;</button>
+    </div>
 
     <script>
         // --- Elementos do DOM ---
-        const paperSelectionScreen = document.getElementById('paper-selection-screen');
-        const writingScreen = document.getElementById('writing-screen');
+        const screens = {
+            main: document.getElementById('main-screen'),
+            instrument: document.getElementById('instrument-selection-screen'),
+            paper: document.getElementById('paper-selection-screen'),
+            writing: document.getElementById('writing-screen'),
+            gallery: document.getElementById('gallery-screen'),
+            viewer: document.getElementById('letter-viewer-modal')
+        };
+        const btnNewLetter = document.getElementById('btn-new-letter');
+        const instrumentOptions = document.querySelectorAll('.instrument-option');
         const paperOptions = document.querySelectorAll('.paper-option');
         const paper = document.getElementById('paper');
         const paperContent = document.getElementById('paper-content');
         const hiddenTextarea = document.getElementById('hidden-textarea');
-        const btnEmail = document.getElementById('btn-email');
-        const btnSeal = document.getElementById('btn-seal');
+        const btnPdf = document.getElementById('btn-pdf');
         const btnBack = document.getElementById('btn-back');
+        const btnBackToInstrument = document.getElementById('btn-back-to-instrument');
+        const btnBackToMainMenu = document.getElementById('btn-back-to-main-menu');
+        const btnPublish = document.getElementById('btn-publish');
+        const btnViewGallery = document.getElementById('btn-view-gallery'); // Novo botão
+        const btnBackToMain = document.getElementById('btn-back-to-main');
+        const btnCloseViewer = document.getElementById('btn-close-viewer');
+        const galleryGrid = document.getElementById('gallery-grid');
+        const letterView = document.getElementById('letter-view');
+        const letterViewerContent = document.getElementById('letter-viewer-content');
         const cursor = document.getElementById('cursor');
         const feedbackMessage = document.getElementById('feedback-message');
-        const sealModal = document.getElementById('seal-modal');
-        const sealOptions = document.querySelectorAll('.seal-option');
-        const btnCancelSeal = document.getElementById('btn-cancel-seal');
 
         let currentText = '';
+        let chosenInstrument = 'typewriter';
+        let chosenPaper = 'paper-linho-marfim';
+        let letters = [];
 
-        // --- Configuração dos Sons ---
-        const keyClickSound = new Tone.PolySynth(Tone.MembraneSynth, {
-            "pitchDecay": 0.01, "octaves": 6, "oscillator": { "type": "square" },
-            "envelope": { "attack": 0.001, "decay": 0.2, "sustain": 0.01, "release": 0.2, }
-        }).toDestination();
+        // --- Sons ---
+        const keyClickSound = new Tone.MembraneSynth({ "pitchDecay": 0.01, "octaves": 6, "oscillator": { "type": "square" }, "envelope": { "attack": 0.001, "decay": 0.2, "sustain": 0.01, "release": 0.2, }}).toDestination();
         keyClickSound.volume.value = -10;
-        const plingSound = new Tone.MetalSynth({ frequency: 400, envelope: { attack: 0.001, decay: 0.4, release: 0.2 }, harmonicity: 8.1, modulationIndex: 40, resonance: 3000, octaves: 1.5 }).toDestination();
-        plingSound.volume.value = -8;
-        const carriageReturnSound = new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0 }}).toDestination();
-        carriageReturnSound.volume.value = -15;
-
-        // --- Lógica Principal ---
         
+        // --- Lógica de Navegação ---
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.add('hidden'));
+            screens[screenName].classList.remove('hidden');
+        }
+
+        btnNewLetter.addEventListener('click', () => showScreen('instrument'));
+        btnViewGallery.addEventListener('click', () => {
+            renderGallery();
+            showScreen('gallery');
+        });
+        btnBackToMainMenu.addEventListener('click', () => showScreen('main'));
+        btnBackToInstrument.addEventListener('click', () => showScreen('instrument'));
+        btnBackToMain.addEventListener('click', () => showScreen('main'));
+        btnCloseViewer.addEventListener('click', () => screens.viewer.classList.add('hidden'));
+
+        instrumentOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                chosenInstrument = option.dataset.instrument;
+                showScreen('paper');
+            });
+        });
+
         paperOptions.forEach(option => {
             option.addEventListener('click', () => {
-                const paperType = option.getAttribute('data-paper-type');
-                paper.className = `w-full max-w-3xl flex-grow p-8 md:p-12 font-typewriter text-2xl leading-loose ${paperType}`;
-                paperSelectionScreen.classList.add('hidden');
-                writingScreen.classList.remove('hidden');
+                chosenPaper = option.dataset.paperType;
+                const fontClass = chosenInstrument === 'typewriter' ? 'font-typewriter' : 'font-quill';
+                paper.className = `w-full max-w-3xl flex-grow p-8 md:p-12 text-2xl leading-loose ${chosenPaper} ${fontClass}`;
+                showScreen('writing');
                 hiddenTextarea.focus();
                 Tone.start();
             });
         });
-
-        paper.addEventListener('click', () => { hiddenTextarea.focus(); });
-        hiddenTextarea.addEventListener('input', (e) => {
-            currentText = e.target.value;
-            paperContent.innerHTML = currentText.replace(/\n/g, '<br>');
-            keyClickSound.triggerAttackRelease('C2', '8n');
-            paper.scrollTop = paper.scrollHeight;
-        });
-        hiddenTextarea.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                plingSound.triggerAttackRelease('C5', '8n', Tone.now());
-                carriageReturnSound.triggerAttackRelease('0.1', Tone.now() + 0.1);
-            } else if (e.key === 'Backspace') {
-                keyClickSound.triggerAttackRelease('A1', '8n');
-            }
-        });
-
+        
         btnBack.addEventListener('click', () => {
             hiddenTextarea.value = '';
             currentText = '';
             paperContent.innerHTML = '';
-            writingScreen.classList.add('hidden');
-            paperSelectionScreen.classList.remove('hidden');
+            btnPdf.disabled = true;
+            btnPublish.disabled = true;
+            showScreen('main');
         });
 
-        btnEmail.addEventListener('click', () => {
-            const subject = "Uma carta do Ateliê Epistolar";
-            const body = encodeURIComponent(currentText);
-            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        // --- Lógica de Escrita ---
+        paper.addEventListener('click', () => { hiddenTextarea.focus(); });
+        hiddenTextarea.addEventListener('input', (e) => {
+            currentText = e.target.value;
+            const hasText = currentText.length > 0;
+            btnPdf.disabled = !hasText;
+            btnPublish.disabled = !hasText;
+            paperContent.innerHTML = currentText.replace(/\n/g, '<br>');
+            
+            if (chosenInstrument === 'typewriter') {
+                keyClickSound.triggerAttackRelease('C2', '32n');
+            }
+            paper.scrollTop = paper.scrollHeight;
+        });
+        
+        // --- Lógica da Galeria ---
+        function loadLetters() {
+            const storedLetters = localStorage.getItem('atelie-letters');
+            if (storedLetters) {
+                letters = JSON.parse(storedLetters);
+            }
+        }
+
+        function saveLetters() {
+            localStorage.setItem('atelie-letters', JSON.stringify(letters));
+        }
+
+        function renderGallery() {
+            galleryGrid.innerHTML = '';
+            if (letters.length === 0) {
+                galleryGrid.innerHTML = `<p class="text-gray-500 col-span-full">A sua galeria está vazia. Escreva e publique uma carta para a começar.</p>`;
+                return;
+            }
+            letters.forEach(letter => {
+                const fontClass = letter.instrument === 'typewriter' ? 'font-typewriter' : 'font-quill';
+                const snippet = letter.text.substring(0, 200) + (letter.text.length > 200 ? '...' : '');
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'letter-thumbnail-wrapper';
+
+                const thumbnail = document.createElement('div');
+                thumbnail.className = `letter-thumbnail choice-card ${letter.paper} ${fontClass}`;
+                thumbnail.innerHTML = `<p>${snippet.replace(/\n/g, '<br>')}</p>`;
+                thumbnail.addEventListener('click', () => viewLetter(letter.id));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteLetter(letter.id);
+                });
+
+                wrapper.appendChild(thumbnail);
+                wrapper.appendChild(deleteBtn);
+                galleryGrid.appendChild(wrapper);
+            });
+        }
+
+        function deleteLetter(id) {
+            letters = letters.filter(l => l.id !== id);
+            saveLetters();
+            renderGallery();
+        }
+
+        function viewLetter(id) {
+            const letter = letters.find(l => l.id === id);
+            if (!letter) return;
+            
+            const fontClass = letter.instrument === 'typewriter' ? 'font-typewriter' : 'font-quill';
+            letterView.className = `letter-view w-full max-w-3xl h-[90vh] p-8 md:p-12 overflow-y-auto relative ${letter.paper} ${fontClass}`;
+            letterViewerContent.innerHTML = letter.text.replace(/\n/g, '<br>');
+            showScreen('viewer');
+        }
+
+        btnPublish.addEventListener('click', () => {
+            const newLetter = {
+                id: Date.now(),
+                text: currentText,
+                instrument: chosenInstrument,
+                paper: chosenPaper
+            };
+            letters.unshift(newLetter);
+            saveLetters();
+            showFeedback('Carta publicada na sua galeria!');
         });
 
-        // --- LÓGICA DE SELO INTEGRADO (RECONSTRUÍDA) ---
-
+        // --- GERAR PDF ---
         function showFeedback(message, isError = false) {
             feedbackMessage.textContent = message;
             feedbackMessage.className = isError 
@@ -175,35 +289,8 @@
             setTimeout(() => { feedbackMessage.classList.replace('opacity-100', 'opacity-0'); }, 3000);
         }
 
-        btnSeal.addEventListener('click', () => {
-            if (currentText.trim() === '') {
-                showFeedback('Escreva algo antes de selar.', true);
-                return;
-            }
-            sealModal.classList.remove('hidden');
-        });
-
-        btnCancelSeal.addEventListener('click', () => {
-            sealModal.classList.add('hidden');
-        });
-
-        sealOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                const sealSvg = option.querySelector('svg').outerHTML;
-                const sealHTML = `<div class="inline-seal-container"><div class="inline-seal">${sealSvg}</div></div>`;
-                
-                // Adiciona o selo ao conteúdo visual
-                paperContent.innerHTML = currentText.replace(/\n/g, '<br>') + sealHTML;
-                
-                sealModal.classList.add('hidden');
-                generatePdf();
-            });
-        });
-
-        // --- GERAR PDF ---
-        function generatePdf() {
+        btnPdf.addEventListener('click', () => {
             cursor.style.display = 'none';
-            
             const element = document.getElementById('paper');
             const options = {
                 margin: [0.5, 0.5, 0.5, 0.5],
@@ -213,24 +300,21 @@
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
-            // Pequena pausa para garantir que o DOM é atualizado antes da captura
             setTimeout(() => {
                 html2pdf().set(options).from(element).save().then(() => {
                     cursor.style.display = 'inline-block';
                     showFeedback('Carta guardada com sucesso!');
-                    
-                    // Limpa o selo da visualização para continuar a editar
-                    const sealInPaper = paper.querySelector('.inline-seal-container');
-                    if(sealInPaper) sealInPaper.remove();
-                    paperContent.innerHTML = currentText.replace(/\n/g, '<br>');
-
                 }).catch(err => {
                     console.error("Erro ao gerar PDF:", err);
                     showFeedback('Ocorreu um erro ao guardar a carta.', true);
                     cursor.style.display = 'inline-block';
                 });
             }, 200);
-        }
+        });
+
+        // --- Inicialização ---
+        loadLetters();
+        showScreen('main');
 
     </script>
 </body>
