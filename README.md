@@ -4,7 +4,7 @@
 
 O Ateliê Epistolar é uma aplicação web interativa que resgata a arte da escrita de cartas em um ambiente digital. Em um mundo de comunicação instantânea, este projeto oferece um refúgio para a reflexão e a criação de mensagens mais ponderadas e significativas. Ele simula a experiência de escrever em diferentes tipos de papel e com distintos instrumentos de escrita, proporcionando uma experiência imersiva e nostálgica.
 
-Desenvolvido com foco em um design elegante, funcionalidade intuitiva e alta responsividade, o Ateliê Epistolar é uma ferramenta perfeita para quem busca expressar pensamentos de forma mais artística e pessoal. Além de permitir a criação de cartas, o aplicativo oferece desafios criativos para inspirar a escrita e uma galeria para armazenar e visualizar as obras criadas.
+Desenvolvido para o componente curricular KPT - Literatura e Produção Textual com foco em um design elegante, funcionalidade intuitiva e alta responsividade, o Ateliê Epistolar é uma ferramenta digital para oa estudantes que, além de permitir a criação de cartas,oferece desafios criativos para inspirar a escrita e uma galeria para armazenar e visualizar as obras criadas.
 
 
 
@@ -120,7 +120,7 @@ Com essas implementações, o Ateliê Epistolar oferece uma experiência de escr
 
 ## 🧑‍💻 Autor
 
-Este projeto foi originalmente desenvolvido por um usuário e posteriormente aprimorado por **Manus AI**.
+Este projeto foi originalmente desenvolvido pelo professor Sérgio Araújo e posteriormente aprimorado por I.A.
 
 ## 🤝 Contribuições
 
