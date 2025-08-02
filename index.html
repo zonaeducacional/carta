@@ -39,6 +39,9 @@
         .paper-pergaminho-salinas.letter-thumbnail::after { background: linear-gradient(to top, #F5EEDC, rgba(245,238,220,0)); }
         .delete-btn { position: absolute; top: 0.5rem; right: 0.5rem; background-color: rgba(239, 68, 68, 0.8); color: white; border-radius: 50%; width: 2rem; height: 2rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; line-height: 1; cursor: pointer; opacity: 0; transition: opacity 0.2s ease; }
         .letter-thumbnail-wrapper:hover .delete-btn { opacity: 1; }
+
+        #btn-challenge { position: absolute; top: 1rem; right: 1rem; background-color: rgba(255, 255, 255, 0.7); border-radius: 50%; padding: 0.5rem; cursor: pointer; transition: all 0.2s ease; }
+        #btn-challenge:hover { transform: scale(1.1); background-color: rgba(255, 255, 255, 1); }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4">
@@ -63,7 +66,7 @@
             <div class="instrument-option choice-card bg-white p-8 rounded-lg shadow-md" data-instrument="typewriter"><h2 class="text-3xl font-bold mb-4 font-typewriter">Máquina de Escrever</h2><p class="text-gray-600">Para a palavra precisa, com o som metálico e o ritmo da História.</p></div>
             <div class="instrument-option choice-card bg-white p-8 rounded-lg shadow-md" data-instrument="quill"><h2 class="text-3xl font-bold mb-4 font-quill">Pena e Tinteiro</h2><p class="text-gray-600">Para o pensamento fluido, com o silêncio da pena a deslizar no papel.</p></div>
         </div>
-        <button id="btn-back-to-main-menu" class="mt-8 text-gray-600 hover:text-gray-800 font-semibold">Voltar ao Menu</button>
+        <button id="btn-back-to-main-menu-1" class="mt-8 text-gray-600 hover:text-gray-800 font-semibold">Voltar ao Menu</button>
     </div>
 
     <!-- TELA 3: SELEÇÃO DE PAPEL -->
@@ -83,6 +86,7 @@
         <textarea id="hidden-textarea" autofocus></textarea>
         <div id="paper" class="w-full max-w-3xl flex-grow p-8 md:p-12 text-2xl leading-loose">
             <span id="paper-content"></span><span id="cursor"></span>
+            <button id="btn-challenge"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg></button>
         </div>
         <div class="w-full max-w-3xl mt-4 flex-shrink-0">
             <div id="controls" class="flex flex-wrap gap-2 sm:gap-4 justify-center">
@@ -100,15 +104,24 @@
         <h1 class="text-4xl md:text-5xl font-bold mb-4 font-typewriter">Galeria de Cartas</h1>
         <p class="text-lg text-gray-600 mb-12">Toque numa carta para a ler ou no '×' para a excluir.</p>
         <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"></div>
-        <button id="btn-back-to-main" class="control-button mt-12 bg-gray-500 text-white font-bold py-3 px-6 rounded-lg">Voltar ao Menu</button>
+        <button id="btn-back-to-main-2" class="control-button mt-12 bg-gray-500 text-white font-bold py-3 px-6 rounded-lg">Voltar ao Menu</button>
     </div>
 
     <!-- TELA 6: LEITOR DE CARTA (MODAL) -->
     <div id="letter-viewer-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center p-4 z-50">
-        <div id="letter-view" class="letter-view w-full max-w-3xl h-[90vh] p-8 md:p-12 overflow-y-auto relative">
+        <div id="letter-view" class="letter-view w-full max-w-3xl h-[90vh] p-8 md:p-12 overflow-y-auto relative bg-white">
             <p id="letter-viewer-content"></p>
         </div>
         <button id="btn-close-viewer" class="absolute top-4 right-4 text-white text-5xl font-bold">&times;</button>
+    </div>
+
+    <!-- TELA 7: MODAL DE DESAFIO -->
+    <div id="challenge-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full text-center relative">
+            <h2 class="text-2xl font-bold mb-4">Desafio Criativo</h2>
+            <p id="challenge-text" class="text-lg text-gray-700 mb-8"></p>
+            <button id="btn-close-challenge" class="control-button bg-gray-800 text-white font-bold py-2 px-6 rounded-lg">Fechar</button>
+        </div>
     </div>
 
     <script>
@@ -119,7 +132,8 @@
             paper: document.getElementById('paper-selection-screen'),
             writing: document.getElementById('writing-screen'),
             gallery: document.getElementById('gallery-screen'),
-            viewer: document.getElementById('letter-viewer-modal')
+            viewer: document.getElementById('letter-viewer-modal'),
+            challenge: document.getElementById('challenge-modal')
         };
         const btnNewLetter = document.getElementById('btn-new-letter');
         const instrumentOptions = document.querySelectorAll('.instrument-option');
@@ -130,16 +144,19 @@
         const btnPdf = document.getElementById('btn-pdf');
         const btnBack = document.getElementById('btn-back');
         const btnBackToInstrument = document.getElementById('btn-back-to-instrument');
-        const btnBackToMainMenu = document.getElementById('btn-back-to-main-menu');
+        const btnBackToMainMenu1 = document.getElementById('btn-back-to-main-menu-1');
         const btnPublish = document.getElementById('btn-publish');
-        const btnViewGallery = document.getElementById('btn-view-gallery'); // Novo botão
-        const btnBackToMain = document.getElementById('btn-back-to-main');
+        const btnViewGallery = document.getElementById('btn-view-gallery'); 
+        const btnBackToMain2 = document.getElementById('btn-back-to-main-2');
         const btnCloseViewer = document.getElementById('btn-close-viewer');
         const galleryGrid = document.getElementById('gallery-grid');
         const letterView = document.getElementById('letter-view');
         const letterViewerContent = document.getElementById('letter-viewer-content');
         const cursor = document.getElementById('cursor');
         const feedbackMessage = document.getElementById('feedback-message');
+        const btnChallenge = document.getElementById('btn-challenge');
+        const challengeText = document.getElementById('challenge-text');
+        const btnCloseChallenge = document.getElementById('btn-close-challenge');
 
         let currentText = '';
         let chosenInstrument = 'typewriter';
@@ -161,9 +178,9 @@
             renderGallery();
             showScreen('gallery');
         });
-        btnBackToMainMenu.addEventListener('click', () => showScreen('main'));
+        btnBackToMainMenu1.addEventListener('click', () => showScreen('main'));
         btnBackToInstrument.addEventListener('click', () => showScreen('instrument'));
-        btnBackToMain.addEventListener('click', () => showScreen('main'));
+        btnBackToMain2.addEventListener('click', () => showScreen('main'));
         btnCloseViewer.addEventListener('click', () => screens.viewer.classList.add('hidden'));
 
         instrumentOptions.forEach(option => {
@@ -236,7 +253,7 @@
                 const thumbnail = document.createElement('div');
                 thumbnail.className = `letter-thumbnail choice-card ${letter.paper} ${fontClass}`;
                 thumbnail.innerHTML = `<p>${snippet.replace(/\n/g, '<br>')}</p>`;
-                thumbnail.addEventListener('click', () => viewLetter(letter.id));
+                thumbnail.addEventListener('click', () => viewUserLetter(letter.id));
 
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'delete-btn';
@@ -258,7 +275,7 @@
             renderGallery();
         }
 
-        function viewLetter(id) {
+        function viewUserLetter(id) {
             const letter = letters.find(l => l.id === id);
             if (!letter) return;
             
@@ -278,6 +295,26 @@
             letters.unshift(newLetter);
             saveLetters();
             showFeedback('Carta publicada na sua galeria!');
+        });
+
+        // --- Lógica dos Desafios ---
+        const writingChallenges = [
+            "Imagine que é um cidadão de Salinas da Margarida em 1950. Escreva uma carta a um parente distante a descrever o seu dia-a-dia na cidade.",
+            "Comece a sua carta com o verso: 'A chuva de ontem deixou mais do que saudade...'",
+            "Escreva uma carta ao seu 'eu' de dez anos no futuro. Que conselho, ou aviso, lhe daria?",
+            "Escolha uma personagem secundária de um livro que admira. Escreva uma carta do ponto de vista dela, revelando um segredo.",
+            "Escreva uma carta de protesto contra uma injustiça social da sua época, como se a estivesse a enviar para um jornal em 1970.",
+            "Descreva o sabor de uma fruta da sua infância a alguém que nunca a provou."
+        ];
+
+        btnChallenge.addEventListener('click', () => {
+            const randomIndex = Math.floor(Math.random() * writingChallenges.length);
+            challengeText.textContent = writingChallenges[randomIndex];
+            screens.challenge.classList.remove('hidden');
+        });
+
+        btnCloseChallenge.addEventListener('click', () => {
+            screens.challenge.classList.add('hidden');
         });
 
         // --- GERAR PDF ---
